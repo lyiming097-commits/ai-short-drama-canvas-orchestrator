@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>短剧创作工作台</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">AI SHORT DRAMA STUDIO</p>
+      <h1>短剧创作工作台</h1>
+    </div>
+    <span class="environment">演示环境 · 模拟模型</span>
+  </header>
+
+  <main class="shell">
+    <section class="intro">
+      <div>
+        <p class="eyebrow">从一句创意开始</p>
+        <h2>把剧情变成可编辑的剧本、分镜和媒体资产</h2>
+        <p class="muted">系统会在剧本和分镜确认点暂停。确认后，后台生成图片、视频和配音，并把结果关联到对应镜头。</p>
+      </div>
+      <div class="flow-strip" aria-label="工作流阶段">
+        <span class="active">01 创意</span><i>→</i><span>02 剧本</span><i>→</i><span>03 分镜</span><i>→</i><span>04 素材</span>
+      </div>
+    </section>
+
+    <section class="workspace-grid">
+      <aside class="panel setup-panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">新建创作</p><h3>输入剧情创意</h3></div>
+          <span class="step-chip">STEP 01</span>
+        </div>
+        <label for="project-name">项目名称</label>
+        <input id="project-name" value="雨夜来信">
+        <label for="canvas-id">画布 ID</label>
+        <input id="canvas-id" value="demo-canvas">
+        <label for="story-prompt">剧情创意</label>
+        <textarea id="story-prompt" rows="7">女主林夏在雨夜的旧城区捡到一封信，发现落款是已经失踪三年的哥哥。</textarea>
+        <button id="start-btn" class="primary full" type="button">开始生成剧本 <span>↗</span></button>
+        <p id="setup-hint" class="hint">创建项目后，系统会先生成剧本并等待确认。</p>
+      </aside>
+
+      <section class="panel canvas-panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">创作画布</p><h3 id="canvas-title">尚未开始</h3></div>
+          <span id="status-badge" class="status idle">等待输入</span>
+        </div>
+        <div id="progress" class="progress-steps">
+          <div class="progress-step active"><b>01</b><span>剧本</span></div>
+          <div class="progress-step"><b>02</b><span>角色与场景</span></div>
+          <div class="progress-step"><b>03</b><span>分镜</span></div>
+          <div class="progress-step"><b>04</b><span>媒体资产</span></div>
+        </div>
+        <div id="canvas-empty" class="empty-state">
+          <div class="empty-icon">✦</div>
+          <h4>等待一段剧情创意</h4>
+          <p>左侧输入内容后，这里会展示结构化创作结果。</p>
+        </div>
+        <div id="canvas-content" class="hidden">
+          <div id="approval-banner" class="approval-banner hidden">
+            <div><strong id="approval-title">需要确认</strong><p id="approval-text">请确认当前内容后继续。</p></div>
+            <div class="approval-actions">
+              <button id="revise-btn" class="secondary" type="button">提出修改</button>
+              <button id="approve-btn" class="primary" type="button">确认并继续 <span>→</span></button>
+            </div>
+          </div>
+          <div id="content-cards" class="content-cards"></div>
+        </div>
+      </section>
+    </section>
+
+    <section id="activity-panel" class="panel activity-panel hidden">
+      <div class="panel-heading"><div><p class="eyebrow">运行记录</p><h3>Agent 与媒体任务</h3></div><span id="event-count" class="muted">0 条事件</span></div>
+      <div class="activity-grid">
+        <div id="timeline" class="timeline"></div>
+        <div id="asset-list" class="asset-list"></div>
+      </div>
+    </section>
+
+    <section class="admin-grid">
+      <section class="panel admin-panel">
+        <div class="panel-heading"><div><p class="eyebrow">模型网关</p><h3>供应商连接</h3></div><span class="step-chip">ADMIN</span></div>
+        <p class="muted">密钥由服务端加密保存，页面只显示脱敏结果。演示可添加 OpenAI 兼容接口或 Seedance 连接。</p>
+        <div class="admin-form-grid">
+          <div><label for="provider-name">连接名称</label><input id="provider-name" value="我的模型网关"></div>
+          <div><label for="provider-type">供应商类型</label><select id="provider-type"><option value="openai_compatible">OpenAI 兼容</option><option value="seedance">Seedance</option><option value="mock">模拟供应商</option></select></div>
+          <div class="wide-field"><label for="provider-base">API Base URL</label><input id="provider-base" value="https://api.deepseek.com/v1"></div>
+          <div><label for="provider-model">默认模型</label><input id="provider-model" value="deepseek-chat"></div>
+          <div><label for="provider-key">API Key</label><input id="provider-key" type="password" placeholder="只发送到后端加密保存"></div>
+        </div>
+        <div class="capabilities"><span>能力</span><label><input type="checkbox" value="llm" checked> 文本</label><label><input type="checkbox" value="vlm"> 视觉</label><label><input type="checkbox" value="image"> 图片</label><label><input type="checkbox" value="video"> 视频</label><label><input type="checkbox" value="tts"> 配音</label></div>
+        <div class="admin-actions"><button id="save-provider" class="primary" type="button">保存连接</button><button id="refresh-providers" class="secondary" type="button">刷新列表</button></div>
+        <div id="provider-list" class="provider-list"><p class="muted">还没有配置模型连接。</p></div>
+      </section>
+      <section class="panel usage-panel">
+        <div class="panel-heading"><div><p class="eyebrow">用量监控</p><h3>Token 消耗</h3></div><button id="refresh-usage" class="secondary compact" type="button">刷新</button></div>
+        <div class="usage-metrics">
+          <div><span>调用次数</span><strong id="usage-calls">0</strong></div>
+          <div><span>输入 Token</span><strong id="usage-input">0</strong></div>
+          <div><span>输出 Token</span><strong id="usage-output">0</strong></div>
+          <div><span>估算费用</span><strong id="usage-cost">0.000000</strong></div>
+        </div>
+        <div id="usage-models" class="usage-models"><p class="muted">运行创作流程后会显示模型用量。</p></div>
+      </section>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
