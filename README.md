@@ -106,7 +106,7 @@ flowchart LR
 - 视频任务：生成交给第三方平台使用的视频参数或视频任务。
 - 音频任务：生成配音文本或 TTS 任务参数。
 
-每个任务由 `run_id + shot_id + prompt + media_type + model` 计算幂等键，避免重复调用和重复结算。任务状态包括 `queued`、`running`、`succeeded`、`retryable_failed`、`failed` 和 `canceled`，支持 Celery/Redis 调度、失败重试、超时补偿和局部恢复。
+每个任务由 `run_id + shot_id + prompt + media_type + model` 计算幂等键，避免重复调用和重复结算。任务状态包括 `queued`、`running`、`succeeded`、`retryable_failed`、`failed` 和 `canceled`，支持 Celery/RabbitMQ 调度、失败重试、超时补偿和局部恢复。
 
 ### 6. 资产归档与画布回填
 
@@ -306,7 +306,7 @@ app/
 
 ## 技术栈
 
-Python、FastAPI、LangGraph、LangChain Core、Pydantic、Celery、Redis、AWS S3、WebSocket、HTTPX、OpenAI-Compatible API。
+Python、FastAPI、LangGraph、LangChain Core、Pydantic、Celery、RabbitMQ、AWS S3、WebSocket、HTTPX、OpenAI-Compatible API。
 
 生产环境可将仓储层替换为 PostgreSQL，并使用 PostgreSQL Checkpointer 保存跨实例的工作流状态。
 
@@ -325,7 +325,7 @@ uvicorn app.main:app --reload
 - `http://127.0.0.1:8000/docs`：FastAPI OpenAPI 文档。
 - `http://127.0.0.1:8000/health`：服务健康检查。
 
-复制 `.env.example` 为 `.env` 后，可配置 Redis、S3 和模型网关加密密钥。开发环境默认使用内存仓储、内存资产存储和模拟模型；设置 `APP_ENV=production` 后可切换 S3 资产存储。
+复制 `.env.example` 为 `.env` 后，可配置 RabbitMQ、S3 和模型网关加密密钥。开发环境默认使用内存仓储、内存资产存储和模拟模型；设置 `APP_ENV=production` 后可切换 S3 资产存储。
 
 ## 主要接口
 
@@ -350,8 +350,8 @@ GET  /api/admin/usage
 
 - 当前仓储默认是线程安全的内存实现，用于演示工作流和 API；多实例部署时应替换为 PostgreSQL 仓储。
 - 当前媒体 Provider 提供适配器接口和本地模拟实现，真实的图片、视频和 TTS 服务可通过模型网关接入。
-- 启用 Celery 时设置 `USE_CELERY=true` 并配置 `REDIS_URL`，Worker 使用 `app.tasks.generate_media_task` 执行媒体任务。
-- 生产环境建议将 API、Worker、Redis、PostgreSQL、S3 和模型网关拆分部署，并为 WebSocket 和任务事件配置统一的事件总线。
+- 启用 Celery 时设置 `USE_CELERY=true` 并配置 `RABBITMQ_URL`，Worker 使用 `app.tasks.generate_media_task` 执行媒体任务；默认使用 RabbitMQ RPC 结果后端。
+- 生产环境建议将 API、Worker、RabbitMQ、PostgreSQL、S3 和模型网关拆分部署，并为 WebSocket 和任务事件配置统一的事件总线。
 
 ## 安全说明
 
